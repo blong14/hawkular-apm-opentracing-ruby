@@ -1,3 +1,4 @@
+require 'httparty'
 
 module Hawkular
 
@@ -10,6 +11,8 @@ module Hawkular
     end
 
     def record(span)
+      return if span.nil?
+
       trace = {
         traceId: span.trace_id,
         parentId: span.parent_id,
@@ -40,24 +43,25 @@ module Hawkular
     private :log_recorder, :endpoint, :timeout
 
     def initialize(url, username, password, debug = false, timeout = 0)
-      base_uri url
-      basic_auth(username, password)
+      self.class.base_uri url
+      self.class.basic_auth(username, password)
+
       @endpoint = '/hawkular/apm/traces/fragments'
       @timeout = timeout
       @log_recorded = StdLogRecorder.new if debug
     end
 
     def record(span)
-      return unless span.present?
+      return if span.nil?
 
       trace = span
                 .context
-                .get_trace
+                .trace
                 .from_span(span)
 
-      log_recorder.record(span) if log_recorder.present?
+      log_recorder.record(span) unless log_recorder.nil?
 
-      post(endpoint, body: [trace].to_json, timeout: timeout, headers: headers)
+      self.class.post(endpoint, body: [trace].to_json, timeout: timeout, headers: headers)
     end
 
     private

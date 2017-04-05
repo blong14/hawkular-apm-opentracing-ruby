@@ -4,6 +4,10 @@ require 'uri'
 module Hawkular
   module BasicUtils
 
+    def generate_span_id
+      raise "not yet implemented"
+    end
+
     def derive_type_from_url(tags)
       url_types = []
       tags.keys.each do |tag|
