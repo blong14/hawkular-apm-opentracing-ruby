@@ -1,6 +1,7 @@
 require 'hawkular/apm_tracer'
 require 'hawkular/apm_span_context'
 require 'hawkular/basic_utils'
+require 'hawkular/deployment_meta_data'
 require 'hawkular/recorder'
 require 'hawkular/sampler'
 require 'hawkular/trace'

@@ -1,8 +1,10 @@
+require 'opentracing'
+require 'hawkular/basic_utils'
 
 module Hawkular
 
   class APMTracer
-    include BasicUtils
+    include Hawkular::BasicUtils
 
     attr_reader :sampler, :recorder, :trace_decorator
 
@@ -13,7 +15,7 @@ module Hawkular
       carrier[Hawkular::CARRIER_LEVEL] = span_context.level if span_context.level > 0
     end
 
-    def self._extract_http_and_text_map(carrier) {
+    def self._extract_http_and_text_map(carrier)
       carrier.keys.each do |key|
         case key.upcase
         when Hawkular::CARRIER_CORRELATION_ID
@@ -37,7 +39,8 @@ module Hawkular
       @recorder = options[:recorder] || Hawkular::StdLogRecorder.new
       @sampler = options[:sampler] || Hawkular::AlwaysSample.new
 
-      deployment_meta_data = options[:deployment_meta_data] || DEFAULT_META_DATA
+      # TODO: Figure out what to do with this below line
+      deployment_meta_data = options[:deployment_meta_data] || Hawkular::DeploymentMetaData.new('hawkular-service')
 
       @trace_decorator = Proc.new do |trace|
         root_node = trace.nodes[0]
@@ -56,8 +59,8 @@ module Hawkular
       end
     end
 
-    def start_span(name, fields)
-      fields_with_operation = fields || {}
+    def start_span(name, fields = {})
+      fields_with_operation = fields
       fields_with_operation[:operation_name] = name
       Hawkular::APMSpan.new(self, fields_with_operation)
     end
@@ -77,8 +80,8 @@ module Hawkular
       })
     end
 
-    def extract(forma, carrier)
-      if format.eqls?(Hawkular::FORMAT_HTTP_HEADERS) || format.eql?(Hawkular::FORMAT_TEXT_MAP)
+    def extract(format, carrier)
+      if format.eqls?(OpenTracing::FORMAT_HTTP_HEADERS) || format.eql?(OpenTracing::FORMAT_TEXT_MAP)
         span_context = APMTracer._extract_http_and_text_map(carrier)
       else
         span_context = Hawkular::APMSpanContext.new
