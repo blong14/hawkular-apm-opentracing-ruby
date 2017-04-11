@@ -48,7 +48,7 @@ module Hawkular
 
       @endpoint = '/hawkular/apm/traces/fragments'
       @timeout = timeout
-      @log_recorded = StdLogRecorder.new if debug
+      @log_recorder = StdLogRecorder.new if debug
     end
 
     def record(span)
@@ -68,7 +68,7 @@ module Hawkular
 
     def headers
       {
-        'Content-Type' => 'application/json'
+        'Content-Type'.to_sym => 'application/json'
       }
     end
 

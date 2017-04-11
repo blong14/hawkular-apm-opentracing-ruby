@@ -3,7 +3,7 @@ module Hawkular
   class Sampler
 
     def is_sampled?(trace)
-      raise "Not implemented!"
+      raise 'Not implemented!'
     end
 
     def never_sample(trace)

@@ -13,7 +13,7 @@ class Hawkular::SamplerTest < Minitest::Test
     span = tracer.start_span('foo')
     span.finish
 
-    assert_equals(recorder.traces.count, 0)
+    assert_equal(recorder.traces.count, 0)
   end
 
   def test_never_sample_extracted_context_all_level
@@ -28,7 +28,7 @@ class Hawkular::SamplerTest < Minitest::Test
     span = tracer.start_span('foo', {child_of: extracted_context})
     span.finish
 
-    assert_equals(recorder.tracers.count, 1)
+    assert_equal(recorder.tracers.count, 1)
   end
 
   def setup_carrier(level)

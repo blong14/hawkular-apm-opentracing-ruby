@@ -25,7 +25,7 @@ module Hawkular
     end
 
     def operation
-      return @operation if @operation.present?
+      return @operation unless @operation.nil?
 
       derive_operation(span)
     end
@@ -41,7 +41,7 @@ module Hawkular
     end
 
     def component_type
-      return nil unless span.present?
+      return nil if span.nil?
 
       derive_component_type(span.tags)
     end
@@ -51,8 +51,8 @@ module Hawkular
     end
 
     def uri
-      return @uri if @uri.present?
-      return nil unless span.present?
+      return @uri unless @uri.nil?
+      return nil if span.nil?
 
       derive_url(span.tags)
     end
@@ -62,20 +62,20 @@ module Hawkular
     end
 
     def timestamp
-      return @timestamp if @timestamp.present?
-      return nil unless span.present?
+      return @timestamp unless @timestamp.nil?
+      return nil if span.nil?
 
       span.start_time
     end
 
     def duration
-      return 0 unless span.present?
+      return 0 if span.nil?
 
       span.duration
     end
 
     def properties
-      return nil unless span.present?
+      return nil if span.nil?
 
       tags_to_properties(span.tags)
     end
@@ -91,14 +91,14 @@ module Hawkular
 
     def add_node(type, span, correlation_ids)
       node = find_node(span.parent_id)
-      @nodes = node.nodes if node.present?
+      @nodes = node.nodes unless node.nil?
 
       @nodes << Node.new(span, type, correlation_ids)
     end
 
     def add_node_without_span(node, parent_id)
-      parent_node = find_node(parent_id, parent_id)
-      @nodes = parent_node.nodes if parent_node.present
+      parent_node = find_node(parent_id)
+      @nodes = parent_node.nodes unless parent_node.nil?
 
       @nodes << node
     end
@@ -111,11 +111,14 @@ module Hawkular
       end
     end
 
-    def is_finished?(span)
+    # TODO: has to be a better name for this method
+    # Tried to implement with a ? to signify a boolean
+    # return value but instead we return a span?
+    def is_finished(span)
       root_span = span
       while root_span.parent_id
         node = find_node(root_span.parent_id)
-        if node.present?
+        if !node.nil?
           root_span = node.span
         else
           break
@@ -148,7 +151,7 @@ module Hawkular
         nodes: nodes
       }
 
-      trace_decorator(trace) if trace_decorator.present?
+      trace_decorator(trace) unless trace_decorator.nil?
 
       trace
     end
@@ -159,9 +162,9 @@ module Hawkular
       return nil if node.span.is_finished?
 
       nodes = node.nodes
-      nodes.each do |_node|
+      nodes.each do
         return nil if node.span.is_finished?
-        return nil if !finished_recur(node)
+        return nil unless finished_recur(node)
       end
 
       node
@@ -173,11 +176,11 @@ module Hawkular
       _nodes.each do |node|
         return node if node.span && span_id == node.span.id
 
-        ret = find_node_dfs(node.nodes)
-        return ret if ret.present?
+        ret = find_node_dfs(node.nodes, node.span.id)
+        return ret unless ret.nil?
       end
 
-      return nil
+      nil
     end
 
     def find_node_position_dfs(_nodes, span_id)
@@ -185,9 +188,9 @@ module Hawkular
 
       _nodes.each_with_index do |node, i|
         return i if span_id == node.span.id
-        ret = find_node_position_dfs(node.nodes)
+        ret = find_node_position_dfs(node.nodes, node.span.id)
 
-        return "#{i}:#{ret}" if ret.present?
+        return "#{i}:#{ret}" unless ret.nil?
       end
 
       nil

@@ -19,4 +19,6 @@ module Hawkular
 
   PROP_SERVICE_NAME = 'service'
   PROP_BUILD_STAMP = 'buildStamp'
+
+  FORMAT_HTTP_HEADERS = 'http_headers'
 end

@@ -3,7 +3,7 @@ require 'hawkular/basic_utils'
 
 module Hawkular
 
-  class APMTracer
+  class APMTracer < OpenTracing::Tracer
     include Hawkular::BasicUtils
 
     attr_reader :sampler, :recorder, :trace_decorator
@@ -16,6 +16,10 @@ module Hawkular
     end
 
     def self._extract_http_and_text_map(carrier)
+      correlation_id = nil
+      trace_id = nil
+      transaction = nil
+      level = nil
       carrier.keys.each do |key|
         case key.upcase
         when Hawkular::CARRIER_CORRELATION_ID
@@ -26,10 +30,17 @@ module Hawkular
           transaction = carrier[key]
         when Hawkular::CARRIER_LEVEL
           level = carrier[key]
+        else
         end
       end
 
-      span_context = APMSpanContext.new(generate_span_id, trace_id, nil, transaction, level)
+      span_context = Hawkular::APMSpanContext.new({
+        span_id: generate_span_id,
+        trace_id: trace_id,
+        parent_id: nil,
+        transaction: transaction,
+        level: level
+      })
       span_context.consumer_correlation_id = correlation_id
 
       span_context
@@ -48,11 +59,11 @@ module Hawkular
           span = root_node.span
           if span
             if deployment_meta_data.service_name && !span.tags.keys.include?(Hawkular::PROP_SERVICE_NAME)
-              span.setTag(Hawkular::PROP_SERVICE_NAME, deployment_meta_data.service_name)
+              span.set_tag(Hawkular::PROP_SERVICE_NAME, deployment_meta_data.service_name)
             end
 
             if deployment_meta_data.build_stamp && !span.tags.keys.include?(Hawkular::PROP_BUILD_STAMP)
-              span.setTag(Hawkular::PROP_BUILD_STAMP, deployment_meta_data.build_stamp);
+              span.set_tag(Hawkular::PROP_BUILD_STAMP, deployment_meta_data.build_stamp);
             end
           end
         end
@@ -70,7 +81,7 @@ module Hawkular
 
       span_context = span_context.context if span_context.is_a?(Hawkular::APMSpan)
 
-      if format.eqls?(Hawkular::FORMAT_HTTP_HEADERS) || format.eql?(Hawkular::FORMAT_TEXT_MAP)
+      if format.eql?(Hawkular::FORMAT_HTTP_HEADERS) || format.eql?(Hawkular::FORMAT_TEXT_MAP)
         APMTracer._inject_http_and_text_map(span_context, carrier)
       end
 
@@ -81,10 +92,10 @@ module Hawkular
     end
 
     def extract(format, carrier)
-      if format.eqls?(OpenTracing::FORMAT_HTTP_HEADERS) || format.eql?(OpenTracing::FORMAT_TEXT_MAP)
+      if format.eql?(Hawkular::FORMAT_HTTP_HEADERS) || format.eql?(OpenTracing::FORMAT_TEXT_MAP)
         span_context = APMTracer._extract_http_and_text_map(carrier)
       else
-        span_context = Hawkular::APMSpanContext.new
+        span_context = Hawkular::APMSpanContext.new({})
       end
 
       span_context

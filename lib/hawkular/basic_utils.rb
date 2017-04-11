@@ -5,13 +5,13 @@ module Hawkular
   module BasicUtils
 
     def generate_span_id
-      raise "not yet implemented"
+      raise 'not yet implemented'
     end
 
     def derive_type_from_url(tags)
       url_types = []
       tags.keys.each do |tag|
-        if tag.includes?('.url') || tag.includes?('.uri')
+        if tag.include?('.url') || tag.include?('.uri')
           url_types << tag[0..tag.length - 4].upcase
         end
       end
@@ -23,40 +23,40 @@ module Hawkular
     end
 
     def derive_operation(span)
-      return span.tags['http.method'] unless span.operation_name.present?
+      return span.tags['http.method'] if span.operation_name.nil?
 
       span.operation_name
     end
 
     def derive_endpoint_type(tags)
       endpoint_type = derive_type_from_url(tags)
-      return 'HTTP' unless endpoint_type.present?
+      return 'HTTP' if endpoint_type.nil?
 
       endpoint_type
     end
 
     def derive_component_type(tags)
       component_type = tags.component
-      return compoent_type if component_type.present?
+      return component_type unless component_type.nil?
 
       derive_type_from_url(tags)
     end
 
     def derive_url(tags)
       url = tags['http.url']
-      return URI.parse(url).path if url.present?
+      return URI.parse(url).path unless url.nil?
 
       url = tags['http.uri']
-      return URI.parse(url).path if url.present?
+      return URI.parse(url).path unless url.nil?
 
       url = tags['http.path']
-      return url if url.present?
+      return url unless url.nil?
 
       nil
     end
 
     def tags_to_properties(tags)
-      return nil unless tags.present?
+      return nil if tags.nil?
 
       properties = []
       tags.keys.each do |tag|
