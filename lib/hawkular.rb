@@ -1,3 +1,5 @@
+
+$LOAD_PATH.unshift(File.join(File.dirname(__FILE__)))
 require 'hawkular/apm_tracer'
 require 'hawkular/apm_span'
 require 'hawkular/apm_span_context'
