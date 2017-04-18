@@ -1,9 +1,8 @@
+require 'hawkular/reference'
 
 module Hawkular
 
   class APMSpan < OpenTracing::Span
-
-    Reference = Struct.new(:type, :referenced_context)
 
     attr_accessor :tags
     attr_reader :tracer, :span_context, :operation_name, :logs
@@ -106,7 +105,7 @@ module Hawkular
     def pre_init(fields)
       if fields.child_of
         ctx = fields.child_of.is_a?(OpenTracing::Span) ? fields.child_of.context : fields.child_of
-        fields.references = Reference.new(Hawkular::REFERENCE_CHILD_OF, ctx)
+        fields.references = Hawkular::Reference.new(Hawkular::REFERENCE_CHILD_OF, ctx)
       end
       fields
     end
@@ -114,7 +113,7 @@ module Hawkular
     def init_references(references)
       if !references.nil?
         references.map! do |reference|
-          Reference.new(
+          Hawkular::Reference.new(
             reference.type,
             reference.referenced_context.is_a?(OpenTracing::Span) ? reference.referenced_context.context : reference.referenced_context
           )
