@@ -5,7 +5,7 @@ class Hawkular::APMTracerTest < Minitest::Test
 
   def setup
     @tracer = Hawkular::APMTracer.new({
-      sampler: Hawkular::NeverSample.new,
+      sampler: Hawkular::AlwaysSample.new,
       recorder: Hawkular::StdLogRecorder.new
     })
   end

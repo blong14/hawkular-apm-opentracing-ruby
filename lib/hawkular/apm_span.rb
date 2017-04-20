@@ -11,7 +11,22 @@ module Hawkular
     attr_reader :tracer, :span_context, :operation_name, :logs
 
     def self.remaining_references_corr_ids(other_references)
-      raise 'not yet implemented!'
+      return [] if other_references.nil?
+
+      correlation_ids = []
+      other_references.each_with_index do |ref, i|
+        _scope = Hawkular::CORR_ID_SCOPE_CAUSED_BY
+        if !other_referneces[i].referenced_context.consumer_correlation_id.nil?
+          _scope = Hawkular::CORR_ID_SCOPE_INTERACTION
+        end
+
+        correlation_ids << {
+          value: Hawkular::APMSpan.correlation_id_value(other_references[i].referenced_context),
+          scope: scope
+        }
+      end
+
+      correlation_ids
     end
 
     def self.primary_correlation_id(reference)
@@ -74,10 +89,10 @@ module Hawkular
       self
     end
 
-    def finish(finish_time = Time.now)
+    def finish(finished_time = Integer(Time.now.to_f * 1000))
       return if is_finished?
       @finished = true
-      @end_millis = finish_time
+      @end_millis = finished_time
       span_to_report = context.trace.is_finished(self)
 
       if !span_to_report.nil?
@@ -117,6 +132,10 @@ module Hawkular
 
     def duration
       return @start_millis && @end_millis ? @end_millis - @start_millis : 0
+    end
+
+    def parent_id
+      span_context.parent_id
     end
 
     private

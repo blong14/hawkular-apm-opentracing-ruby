@@ -159,7 +159,7 @@ module Hawkular
     private
 
     def finished_recur(node)
-      return nil if node.span.is_finished?
+      return nil if !node.span.is_finished?
 
       nodes = node.nodes
       nodes.each do
