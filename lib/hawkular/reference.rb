@@ -3,7 +3,7 @@ module Hawkular
 
   class Reference
 
-    attr_reader :type, :referenced_context
+    attr_accessor :type, :referenced_context
 
     def initialize(type, referenced_context)
       @type = type

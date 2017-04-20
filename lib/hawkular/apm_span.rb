@@ -1,21 +1,39 @@
 require 'hawkular/reference'
+require 'hawkular/basic_utils'
 
 module Hawkular
 
   class APMSpan < OpenTracing::Span
+    include Hawkular::BasicUtils
 
     attr_accessor :tags
     attr_reader :tracer, :span_context, :operation_name, :logs
 
+    def self.remaining_references_corr_ids(other_references)
+      raise 'not yet implemented!'
+    end
+
+    def self.primary_correlation_id(reference)
+      raise 'not yet implemented!'
+    end
+
+    def self.correlation_id_value(context)
+      raise 'not yet implemented!'
+    end
+
+    def self.find_root_span()
+      raise 'not yet implemented!'
+    end
+
     def initialize(tracer, fields)
       fields = pre_init(fields)
       @tracer = tracer
-      @operation_name = fields.operation_name
-      @tags = fields.tags || {}
-      @start_millis = fields.start_time || Integer(Time.now.to_f * 1000)
+      @operation_name = fields[:operation_name]
+      @tags = fields[:tags] || {}
+      @start_millis = fields[:start_time] || Integer(Time.now.to_f * 1000)
       @logs = []
       @finished = false
-      fields.references = init_references(fields.references)
+      fields[:references] = init_references(fields[:references])
       @span_context.trace.trace_decorator = tracer.trace_decorator
     end
 
@@ -59,7 +77,7 @@ module Hawkular
       return if is_finished?
       @finished = true
       @end_millis = finish_time
-      span_to_report= context.trace.is_finished(self)
+      span_to_report = context.trace.is_finished(self)
 
       if !span_to_report.nil?
         level = context.level == Hawkular::REPORTING_LEVEL_ALL ? context.level : span_to_report.context.level
@@ -103,9 +121,9 @@ module Hawkular
     private
 
     def pre_init(fields)
-      if fields.child_of
-        ctx = fields.child_of.is_a?(OpenTracing::Span) ? fields.child_of.context : fields.child_of
-        fields.references = Hawkular::Reference.new(Hawkular::REFERENCE_CHILD_OF, ctx)
+      if fields[:child_of]
+        ctx = fields[:child_of].is_a?(OpenTracing::Span) ? fields[:child_of].context : fields[:child_of]
+        fields[:references] = Hawkular::Reference.new(Hawkular::REFERENCE_CHILD_OF, ctx)
       end
       fields
     end
@@ -121,12 +139,25 @@ module Hawkular
       end
 
       if references.nil? || references.empty?
-        return init_child_of(references)
+        return init_child_of(Hawkular::Reference.new(nil, nil))
       end
 
       primary_reference = find_primary_reference(references)
 
-      #TODO: Finish this method
+      if primary_reference
+        if !primary_reference.referenced_context.consumer_correlation_id.nil?
+          primary_reference.type = Hawkular::REFERENCE_CHILD_OF
+        end
+
+        case primary_reference.type
+        when Hawkular::REFERENCE_CHILD_OF
+          init_child_of(primary_reference, references.select{|ref| ref != primary_reference})
+        when Hawkular::REFERENCE_FOLLOWS_FROM
+          init_follows_from_or_join(primary_reference, references.select{|ref| ref != primary_reference})
+        end
+      else
+        init_follows_from_or_join(primary_reference[0], references.slice(1))
+      end
     end
 
     def find_primary_reference(references)
@@ -161,6 +192,54 @@ module Hawkular
       end
 
       nil
+    end
+
+    def init_child_of(primary_reference, other_references = [])
+      parent_context = primary_reference.referenced_context
+
+      id = generate_span_id
+      trace_id = nil
+      parent_id = nil
+
+      if parent_context
+        parent_id = parent_context.id
+        trace_id = parent_context.trace_id
+      else
+        trace_id = id
+      end
+
+      node_type = Hawkular::NODE_TYPE_COMPONENT
+      @span_context = Hawkular::APMSpanContext({
+        id: id,
+        trace_id: trace_id,
+        parent_id: parent_id,
+        transaction: parent_context.try(:transaction),
+        level: parent_context.try(:level)
+      })
+
+      if parent_context
+        if !parent_context.consumer_correlation_id
+          @span_context.trace = parent_context.trace
+        end
+      end
+
+      corr_ids = Hawkular::APMSpan.remaining_references_corr_ids(other_references)
+      if parent_context
+        node_type = Hawkular::NODE_TYPE_CONSUMER
+        if !parent_context.consumer_correlation_id.nil?
+          corr_ids.unshift({
+            value: parent_context.consumer_correlation_id,
+            scope: Hawkular::CORR_ID_SCOPE_INTERACTION
+          })
+        end
+      end
+
+      @span_context.trace.add_node(node_type, self, corr_ids)
+
+    end
+
+    def init_follows_from_or_join(primary_reference, other_references = [])
+      raise 'not yet implemented!'
     end
 
   end

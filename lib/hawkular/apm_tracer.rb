@@ -9,6 +9,7 @@ module Hawkular
     attr_reader :sampler, :recorder, :trace_decorator
 
     def self._inject_http_and_text_map(span_context, carrier)
+      extend Hawkular::BasicUtils #TODO: ughh
       carrier[Hawkular::CARRIER_TRACE_ID] = span_context.trace_id
       carrier[Hawkular::CARRIER_CORRELATION_ID] = generate_span_id
       carrier[Hawkular::CARRIER_TRANSACTION] = span_context.transaction if span_context.transaction
@@ -16,6 +17,8 @@ module Hawkular
     end
 
     def self._extract_http_and_text_map(carrier)
+      extend Hawkular::BasicUtils #TODO: ughh
+
       correlation_id = nil
       trace_id = nil
       transaction = nil
