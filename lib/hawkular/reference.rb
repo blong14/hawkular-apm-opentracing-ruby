@@ -3,7 +3,7 @@ module Hawkular
 
   class Reference
 
-    attr_accessor :type, :referenced_context
+    attr_reader :type
 
     def initialize(type, referenced_context)
       @type = type
@@ -12,6 +12,14 @@ module Hawkular
 
     def referenced_context
       @referenced_context || Hawkular::APMSpanContext.new({})
+    end
+
+    def reference_context=(ctx)
+      @referenced_context = ctx
+    end
+
+    def type=(type)
+      @type = type
     end
 
   end
