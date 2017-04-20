@@ -6,8 +6,6 @@ module Hawkular
 
     attr_reader :span_id, :trace_id, :parent_id, :transaction, :consumer_correlation_id, :trace, :level
 
-    attr_writer :consumer_correlation_id, :trace, :level
-
     def initialize(baggage)
       @span_id = baggage[:span_id]
       @trace_id= baggage[:trace_id]
@@ -22,6 +20,18 @@ module Hawkular
 
     def id
       span_id
+    end
+
+    def consumer_correlation_id=(id)
+      @consumer_correlation_id = id
+    end
+
+    def trace=(trace)
+      @trace = trace
+    end
+
+    def level=(level)
+      @level = level
     end
 
   end
