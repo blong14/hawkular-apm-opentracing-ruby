@@ -10,6 +10,10 @@ module Hawkular
       @referenced_context = referenced_context
     end
 
+    def referenced_context
+      @referenced_context || Hawkular::APMSpanContext.new({})
+    end
+
   end
 
 end

@@ -1,5 +1,6 @@
 require 'hawkular/reference'
 require 'hawkular/basic_utils'
+require 'hawkular/apm_span_context'
 
 module Hawkular
 
@@ -123,7 +124,7 @@ module Hawkular
     def pre_init(fields)
       if fields[:child_of]
         ctx = fields[:child_of].is_a?(OpenTracing::Span) ? fields[:child_of].context : fields[:child_of]
-        fields[:references] = Hawkular::Reference.new(Hawkular::REFERENCE_CHILD_OF, ctx)
+        fields[:references] = [Hawkular::Reference.new(Hawkular::REFERENCE_CHILD_OF, ctx)]
       end
       fields
     end
@@ -209,12 +210,12 @@ module Hawkular
       end
 
       node_type = Hawkular::NODE_TYPE_COMPONENT
-      @span_context = Hawkular::APMSpanContext({
-        id: id,
+      @span_context = Hawkular::APMSpanContext.new({
+        span_id: id,
         trace_id: trace_id,
         parent_id: parent_id,
-        transaction: parent_context.try(:transaction),
-        level: parent_context.try(:level)
+        transaction: parent_context.transaction,
+        level: parent_context.level
       })
 
       if parent_context

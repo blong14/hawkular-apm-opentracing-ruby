@@ -1,11 +1,12 @@
 require 'uri'
+require 'securerandom'
 
 
 module Hawkular
   module BasicUtils
 
     def generate_span_id
-      raise 'not yet implemented'
+      SecureRandom.uuid
     end
 
     def derive_type_from_url(tags)

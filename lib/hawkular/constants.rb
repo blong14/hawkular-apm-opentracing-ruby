@@ -20,5 +20,9 @@ module Hawkular
   PROP_SERVICE_NAME = 'service'
   PROP_BUILD_STAMP = 'buildStamp'
 
+  #TODO: Move below to opentracing ruby?!?!
   FORMAT_HTTP_HEADERS = 'http_headers'
+
+  REFERENCE_CHILD_OF = 'child_of'
+  REFERENCE_FOLLOWS_FROM = 'follows_from'
 end

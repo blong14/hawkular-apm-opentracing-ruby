@@ -19,6 +19,11 @@ module Hawkular
       @trace = Hawkular::Trace.new
       @baggage = baggage
     end
+
+    def id
+      span_id
+    end
+
   end
 
 end
