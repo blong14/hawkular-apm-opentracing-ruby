@@ -62,10 +62,10 @@ module Hawkular
       self
     end
 
-    def log(key_value_pairs, time = Time.now)
+    def log(key_value_pairs, time = Integer(Time.now.to_f * 1000))
       key_value_pairs.each do |key, value|
         logs << {
-          key: key,
+          key: key.to_s,
           value: value,
           timestamp: time
         }
@@ -74,8 +74,8 @@ module Hawkular
 
     def set_tag(key, value)
       if !key.nil? && !value.nil?
-        tags[key] = value
-        if Hawkular::SamplingPriority.eql?(key)
+        tags[key.to_sym] = value
+        if Hawkular::SAMPLING_PRIORITY.eql?(key)
           span_context.level = value.to_i > 0 ? Hawkular::REPORTING_LEVEL_ALL : Hawkular::REPORTING_LEVEL_NONE
         end
       end

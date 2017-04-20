@@ -25,4 +25,6 @@ module Hawkular
 
   REFERENCE_CHILD_OF = 'child_of'
   REFERENCE_FOLLOWS_FROM = 'follows_from'
+
+  SAMPLING_PRIORITY = 'sampling.priority'
 end
